@@ -10,8 +10,10 @@ import org.dps.gittask.ui.theme.Repository.GitHubRepository
 import org.dps.gittask.ui.theme.ViewModels.ReposUiState
 import org.dps.gittask.ui.theme.ViewModels.RepositoryViewModel
 import org.dps.gittask.ui.theme.model.Repository
+import org.dps.gittask.ui.theme.model.User
 import org.junit.*
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 
 @ExperimentalCoroutinesApi
@@ -61,6 +63,28 @@ class RepositoryViewModelTest {
 
         // Assert: Verify that uiState is updated with success
         assertEquals(ReposUiState.Success(fakeRepos), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `check if repository with more than 5000 forks is identified correctly`() = runTest {
+        // Arrange: Create a repository with more than 5000 forks
+        val fakeUser = User("TestUser", "https://avatar.url")
+        val repoWithManyForks = Repository("PopularRepo", "Very popular repo", forks = 6000, stargazers_count = 10000)
+
+        // Simulate repository returning the user and the repo
+        coEvery { repository.getUser("testuser") } returns fakeUser
+        coEvery { repository.getUserRepos("testuser") } returns listOf(repoWithManyForks)
+
+        // Act: Call the ViewModel's fetchUser method
+        viewModel.fetchUserRepos("testuser")
+
+        // Simulate advancing time in the coroutine environment
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert: Verify that the repository with more than 5000 forks is in the repos list
+        assertEquals(repoWithManyForks, viewModel.repose.first())
+        assertTrue(viewModel.repose.first().forks> 5000)
+        assertEquals("PopularRepo", viewModel.repose.first().name)
     }
 
     @Test

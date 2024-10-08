@@ -18,7 +18,7 @@ sealed class ReposUiState {
 }
 
 class RepositoryViewModel(private val repository: GitHubRepository) : ViewModel() {
-    var repos by mutableStateOf<List<RepositoryViewModel>>(emptyList())
+    var repose by mutableStateOf<List<Repository>>(emptyList())
 
     private val _uiState = MutableStateFlow<ReposUiState>(ReposUiState.Loading)
     val uiState: StateFlow<ReposUiState> = _uiState
@@ -28,6 +28,7 @@ class RepositoryViewModel(private val repository: GitHubRepository) : ViewModel(
             _uiState.value = ReposUiState.Loading
             try {
                 val repos = repository.getUserRepos(userId)
+                repose=repository.getUserRepos(userId)
                 _uiState.value = ReposUiState.Success(repos)
             } catch (e: Exception) {
                 _uiState.value = ReposUiState.Error(e.localizedMessage ?: "An error occurred")
